@@ -40,8 +40,8 @@ const Navbar = () => {
 
         <div className="flex items-center justify-center w-1/3">
           <a href="#home" className="flex items-center gap-2">
-            <MicroscopeIcon className="h-7 w-7 text-healthcare-600" />
-            <span className="text-2xl font-semibold">MedML</span>
+            <MicroscopeIcon className="h-8 w-8 text-healthcare-600" />
+            <span className="text-2xl md:text-3xl font-semibold">MedML</span>
           </a>
         </div>
 

@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { ArrowDownIcon, MicroscopeIcon } from 'lucide-react';
+import { ArrowDownIcon } from 'lucide-react';
 import FadeIn from '../animations/FadeIn';
 
 const Hero = () => {
@@ -17,13 +17,6 @@ const Hero = () => {
       
       <div className="max-w-7xl mx-auto w-full">
         <div className="flex flex-col items-center text-center">
-          <FadeIn>
-            <div className="flex items-center justify-center gap-3 mb-6">
-              <MicroscopeIcon className="h-10 w-10 text-healthcare-600" />
-              <span className="text-3xl font-bold">MedML</span>
-            </div>
-          </FadeIn>
-          
           <FadeIn delay={100}>
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight mb-6">
               Using ML Models to Create <span className="text-healthcare-600">Predictive Diagnosis Model</span> for Genetic Disease
