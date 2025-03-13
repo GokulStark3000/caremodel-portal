@@ -8,9 +8,9 @@ import { ArrowRightIcon } from 'lucide-react';
 import FadeIn from '../animations/FadeIn';
 
 interface DiseaseLayoutProps {
-  children: React.ReactNode;
+  children?: React.ReactNode;
   title: string;
-  description: string;
+  description: React.ReactNode; // Changed from string to React.ReactNode
   icon: React.ReactNode;
   modelName: string;
   modelDescription: string;
