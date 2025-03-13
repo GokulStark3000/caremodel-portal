@@ -26,7 +26,7 @@ const Hero = () => {
             
             <FadeIn delay={100}>
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight mb-6">
-                Transform Healthcare with <span className="text-healthcare-600">Advanced ML Models</span>
+                Using ML Models to Create <span className="text-healthcare-600">Predictive Diagnosis Model</span> for Genetic Disease
               </h1>
             </FadeIn>
             
@@ -39,16 +39,10 @@ const Hero = () => {
             <FadeIn delay={300}>
               <div className="flex flex-col sm:flex-row gap-4">
                 <a 
-                  href="#demo" 
-                  className="px-8 py-3 rounded-full bg-healthcare-600 text-white font-medium hover:bg-healthcare-700 transition-colors shadow-sm text-center"
-                >
-                  Try Demo
-                </a>
-                <a 
-                  href="#features" 
+                  href="#diseases" 
                   className="px-8 py-3 rounded-full border border-healthcare-200 text-healthcare-700 font-medium hover:bg-healthcare-50 transition-colors text-center flex items-center justify-center gap-2"
                 >
-                  Learn More <ArrowDownIcon size={16} />
+                  Explore Diseases <ArrowDownIcon size={16} />
                 </a>
               </div>
             </FadeIn>

@@ -3,12 +3,9 @@ import { cn } from '@/lib/utils';
 import { MicroscopeIcon, MenuIcon, XIcon } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 
+// Simplified navigation with just the diseases section
 const navLinks = [
-  { name: 'Home', href: '#home' },
-  { name: 'Features', href: '#features' },
-  { name: 'Demo', href: '#demo' },
-  { name: 'About', href: '#about' },
-  { name: 'Contact', href: '#contact' },
+  { name: 'Diseases', href: '#diseases' },
 ];
 
 const Navbar = () => {
@@ -56,15 +53,6 @@ const Navbar = () => {
           ))}
         </ul>
 
-        <div className="hidden md:block">
-          <a
-            href="#demo"
-            className="px-6 py-2.5 rounded-full bg-healthcare-600 text-white font-medium hover:bg-healthcare-700 transition-colors shadow-sm"
-          >
-            Try Demo
-          </a>
-        </div>
-
         {/* Mobile menu button */}
         <button
           className="md:hidden text-foreground"
@@ -93,14 +81,6 @@ const Navbar = () => {
               {link.name}
             </a>
           ))}
-          
-          <a
-            href="#demo"
-            className="mt-2 w-full py-2.5 rounded-full bg-healthcare-600 text-white font-medium hover:bg-healthcare-700 transition-colors shadow-sm text-center"
-            onClick={() => setMobileMenuOpen(false)}
-          >
-            Try Demo
-          </a>
         </div>
       </div>
     </header>
