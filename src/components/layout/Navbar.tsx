@@ -34,33 +34,41 @@ const Navbar = () => {
       )}
     >
       <nav className="max-w-7xl mx-auto flex items-center justify-between">
-        <a href="#home" className="flex items-center gap-2">
-          <MicroscopeIcon className="h-6 w-6 text-healthcare-600" />
-          <span className="text-xl font-semibold">MedML</span>
-        </a>
+        <div className="w-1/3 md:flex items-center justify-start">
+          {/* Empty div for layout balance */}
+        </div>
 
-        {/* Desktop Menu */}
-        <ul className="hidden md:flex items-center gap-8">
-          {navLinks.map((link) => (
-            <li key={link.name}>
-              <a
-                href={link.href}
-                className="text-foreground/80 hover:text-healthcare-600 transition-colors font-medium"
-              >
-                {link.name}
-              </a>
-            </li>
-          ))}
-        </ul>
+        <div className="flex items-center justify-center w-1/3">
+          <a href="#home" className="flex items-center gap-2">
+            <MicroscopeIcon className="h-7 w-7 text-healthcare-600" />
+            <span className="text-2xl font-semibold">MedML</span>
+          </a>
+        </div>
 
-        {/* Mobile menu button */}
-        <button
-          className="md:hidden text-foreground"
-          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          aria-label="Toggle menu"
-        >
-          {mobileMenuOpen ? <XIcon size={24} /> : <MenuIcon size={24} />}
-        </button>
+        <div className="w-1/3 flex items-center justify-end">
+          {/* Desktop Menu */}
+          <ul className="hidden md:flex items-center gap-8">
+            {navLinks.map((link) => (
+              <li key={link.name}>
+                <a
+                  href={link.href}
+                  className="text-foreground/80 hover:text-healthcare-600 transition-colors font-medium"
+                >
+                  {link.name}
+                </a>
+              </li>
+            ))}
+          </ul>
+
+          {/* Mobile menu button */}
+          <button
+            className="md:hidden text-foreground"
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            aria-label="Toggle menu"
+          >
+            {mobileMenuOpen ? <XIcon size={24} /> : <MenuIcon size={24} />}
+          </button>
+        </div>
       </nav>
 
       {/* Mobile Menu Dropdown */}
