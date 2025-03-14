@@ -4,7 +4,6 @@ import PredictionLayout from '@/components/layout/PredictionLayout';
 import { Droplet, AlertCircle } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
@@ -27,8 +26,8 @@ const formSchema = z.object({
   gender: z.enum(["Female", "Male", "Other"], {
     required_error: "Please select your gender",
   }),
-  smoking_history: z.enum(["current", "ever", "former", "never", "not current"], {
-    required_error: "Please select your smoking history",
+  smoking: z.enum(["0", "1"], {
+    required_error: "Please select if you smoke",
   })
 });
 
@@ -48,7 +47,7 @@ const DiabetesPredict = () => {
       HbA1c_level: undefined,
       blood_glucose_level: undefined,
       gender: undefined,
-      smoking_history: undefined,
+      smoking: undefined,
     },
   });
 
@@ -65,11 +64,11 @@ const DiabetesPredict = () => {
       blood_glucose_level: data.blood_glucose_level,
       gender_Male: data.gender === "Male" ? 1 : 0,
       gender_Other: data.gender === "Other" ? 1 : 0,
-      smoking_history_current: data.smoking_history === "current" ? 1 : 0,
-      smoking_history_ever: data.smoking_history === "ever" ? 1 : 0,
-      smoking_history_former: data.smoking_history === "former" ? 1 : 0,
-      smoking_history_never: data.smoking_history === "never" ? 1 : 0,
-      smoking_history_not_current: data.smoking_history === "not current" ? 1 : 0,
+      smoking_history_current: data.smoking === "1" ? 1 : 0,
+      smoking_history_ever: data.smoking === "1" ? 1 : 0,
+      smoking_history_former: data.smoking === "1" ? 1 : 0,
+      smoking_history_never: data.smoking === "0" ? 1 : 0,
+      smoking_history_not_current: data.smoking === "0" ? 1 : 0,
     };
     
     console.log("Model input:", modelInput);
@@ -98,8 +97,7 @@ const DiabetesPredict = () => {
     
     // Gender and smoking can also contribute
     if (data.gender === "Male") score += 5;
-    if (data.smoking_history === "current") score += 10;
-    else if (data.smoking_history === "former" || data.smoking_history === "ever") score += 5;
+    if (data.smoking === "1") score += 10;
     
     // Scale to percentage (0-100)
     const finalScore = Math.min(Math.round(score), 100);
@@ -291,10 +289,10 @@ const DiabetesPredict = () => {
             
             <FormField
               control={form.control}
-              name="smoking_history"
+              name="smoking"
               render={({ field }) => (
                 <FormItem className="space-y-3">
-                  <FormLabel>Smoking History</FormLabel>
+                  <FormLabel>Do you smoke?</FormLabel>
                   <FormControl>
                     <RadioGroup
                       onValueChange={field.onChange}
@@ -303,33 +301,15 @@ const DiabetesPredict = () => {
                     >
                       <FormItem className="flex items-center space-x-3 space-y-0">
                         <FormControl>
-                          <RadioGroupItem value="current" />
+                          <RadioGroupItem value="1" />
                         </FormControl>
-                        <FormLabel className="font-normal">Current smoker</FormLabel>
+                        <FormLabel className="font-normal">Yes</FormLabel>
                       </FormItem>
                       <FormItem className="flex items-center space-x-3 space-y-0">
                         <FormControl>
-                          <RadioGroupItem value="ever" />
+                          <RadioGroupItem value="0" />
                         </FormControl>
-                        <FormLabel className="font-normal">Ever smoked</FormLabel>
-                      </FormItem>
-                      <FormItem className="flex items-center space-x-3 space-y-0">
-                        <FormControl>
-                          <RadioGroupItem value="former" />
-                        </FormControl>
-                        <FormLabel className="font-normal">Former smoker</FormLabel>
-                      </FormItem>
-                      <FormItem className="flex items-center space-x-3 space-y-0">
-                        <FormControl>
-                          <RadioGroupItem value="never" />
-                        </FormControl>
-                        <FormLabel className="font-normal">Never smoked</FormLabel>
-                      </FormItem>
-                      <FormItem className="flex items-center space-x-3 space-y-0">
-                        <FormControl>
-                          <RadioGroupItem value="not current" />
-                        </FormControl>
-                        <FormLabel className="font-normal">Not currently smoking</FormLabel>
+                        <FormLabel className="font-normal">No</FormLabel>
                       </FormItem>
                     </RadioGroup>
                   </FormControl>
