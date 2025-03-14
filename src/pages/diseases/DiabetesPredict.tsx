@@ -40,11 +40,11 @@ const DiabetesPredict = () => {
   
   // Define the smoking history mapping
   const smokingMapping = {
-    0: { smoking_history_current: 0, smoking_history_ever: 0, smoking_history_former: 0, smoking_history_never: 1, smoking_history_not_current: 0 }, // Never
-    1: { smoking_history_current: 1, smoking_history_ever: 0, smoking_history_former: 0, smoking_history_never: 0, smoking_history_not_current: 0 }, // Current
-    2: { smoking_history_current: 0, smoking_history_ever: 1, smoking_history_former: 0, smoking_history_never: 0, smoking_history_not_current: 0 }, // Ever
-    3: { smoking_history_current: 0, smoking_history_ever: 0, smoking_history_former: 1, smoking_history_never: 0, smoking_history_not_current: 0 }, // Former
-    4: { smoking_history_current: 0, smoking_history_ever: 0, smoking_history_former: 0, smoking_history_never: 0, smoking_history_not_current: 1 }, // Not Current
+    "0": { smoking_history_current: 0, smoking_history_ever: 0, smoking_history_former: 0, smoking_history_never: 1, smoking_history_not_current: 0 }, // Never
+    "1": { smoking_history_current: 1, smoking_history_ever: 0, smoking_history_former: 0, smoking_history_never: 0, smoking_history_not_current: 0 }, // Current
+    "2": { smoking_history_current: 0, smoking_history_ever: 1, smoking_history_former: 0, smoking_history_never: 0, smoking_history_not_current: 0 }, // Ever
+    "3": { smoking_history_current: 0, smoking_history_ever: 0, smoking_history_former: 1, smoking_history_never: 0, smoking_history_not_current: 0 }, // Former
+    "4": { smoking_history_current: 0, smoking_history_ever: 0, smoking_history_former: 0, smoking_history_never: 0, smoking_history_not_current: 1 }, // Not Current
   };
 
   // Map smoking history labels
@@ -74,7 +74,7 @@ const DiabetesPredict = () => {
     console.log("Form data:", data);
     
     // Get smoking mapping based on selection
-    const selectedSmokingHistory = smokingMapping[data.smoking_history as keyof typeof smokingMapping];
+    const selectedSmokingHistory = smokingMapping[data.smoking_history];
     
     // Convert data for ML model format
     const modelInput = {
