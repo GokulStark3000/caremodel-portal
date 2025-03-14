@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
@@ -27,8 +27,20 @@ const formSchema = z.object({
   gender: z.enum(["Female", "Male", "Other"], {
     required_error: "Please select your gender",
   }),
-  smoking_history: z.enum(["0", "1", "2", "3", "4"], {
-    required_error: "Please select your smoking history",
+  smoking_history_current: z.enum(["0", "1"], {
+    required_error: "Please answer if you currently smoke",
+  }),
+  smoking_history_ever: z.enum(["0", "1"], {
+    required_error: "Please answer if you have ever smoked",
+  }),
+  smoking_history_former: z.enum(["0", "1"], {
+    required_error: "Please answer if you are a former smoker",
+  }),
+  smoking_history_never: z.enum(["0", "1"], {
+    required_error: "Please answer if you have never smoked",
+  }),
+  smoking_history_not_current: z.enum(["0", "1"], {
+    required_error: "Please answer if you're not currently smoking",
   }),
 });
 
@@ -37,30 +49,6 @@ type FormValues = z.infer<typeof formSchema>;
 const DiabetesPredict = () => {
   const [showResult, setShowResult] = useState(false);
   const [riskScore, setRiskScore] = useState(0);
-  
-  // Define the smoking history mapping
-  const smokingMapping: Record<string, { 
-    smoking_history_current: number, 
-    smoking_history_ever: number, 
-    smoking_history_former: number, 
-    smoking_history_never: number, 
-    smoking_history_not_current: number 
-  }> = {
-    "0": { smoking_history_current: 0, smoking_history_ever: 0, smoking_history_former: 0, smoking_history_never: 1, smoking_history_not_current: 0 }, // Never
-    "1": { smoking_history_current: 1, smoking_history_ever: 0, smoking_history_former: 0, smoking_history_never: 0, smoking_history_not_current: 0 }, // Current
-    "2": { smoking_history_current: 0, smoking_history_ever: 1, smoking_history_former: 0, smoking_history_never: 0, smoking_history_not_current: 0 }, // Ever
-    "3": { smoking_history_current: 0, smoking_history_ever: 0, smoking_history_former: 1, smoking_history_never: 0, smoking_history_not_current: 0 }, // Former
-    "4": { smoking_history_current: 0, smoking_history_ever: 0, smoking_history_former: 0, smoking_history_never: 0, smoking_history_not_current: 1 }, // Not Current
-  };
-
-  // Map smoking history labels
-  const smokingHistoryLabels = {
-    "0": "Never smoked",
-    "1": "Currently smoking",
-    "2": "Ever smoked",
-    "3": "Former smoker",
-    "4": "Not currently smoking"
-  };
   
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -72,15 +60,16 @@ const DiabetesPredict = () => {
       HbA1c_level: undefined,
       blood_glucose_level: undefined,
       gender: undefined,
-      smoking_history: undefined,
+      smoking_history_current: undefined,
+      smoking_history_ever: undefined,
+      smoking_history_former: undefined,
+      smoking_history_never: undefined,
+      smoking_history_not_current: undefined,
     },
   });
 
   const onSubmit = (data: FormValues) => {
     console.log("Form data:", data);
-    
-    // Get smoking mapping based on selection
-    const selectedSmokingHistory = smokingMapping[data.smoking_history];
     
     // Convert data for ML model format
     const modelInput = {
@@ -92,7 +81,11 @@ const DiabetesPredict = () => {
       blood_glucose_level: data.blood_glucose_level,
       gender_Male: data.gender === "Male" ? 1 : 0,
       gender_Other: data.gender === "Other" ? 1 : 0,
-      ...selectedSmokingHistory
+      smoking_history_current: data.smoking_history_current === "1" ? 1 : 0,
+      smoking_history_ever: data.smoking_history_ever === "1" ? 1 : 0,
+      smoking_history_former: data.smoking_history_former === "1" ? 1 : 0,
+      smoking_history_never: data.smoking_history_never === "1" ? 1 : 0,
+      smoking_history_not_current: data.smoking_history_not_current === "1" ? 1 : 0,
     };
     
     console.log("Model input:", modelInput);
@@ -123,9 +116,9 @@ const DiabetesPredict = () => {
     if (data.gender === "Male") score += 5;
     
     // Smoking history factors
-    if (selectedSmokingHistory.smoking_history_current === 1) score += 10;
-    if (selectedSmokingHistory.smoking_history_ever === 1) score += 5;
-    if (selectedSmokingHistory.smoking_history_former === 1) score += 3;
+    if (data.smoking_history_current === "1") score += 10;
+    if (data.smoking_history_ever === "1") score += 5;
+    if (data.smoking_history_former === "1") score += 3;
     
     // Scale to percentage (0-100)
     const finalScore = Math.min(Math.round(score), 100);
@@ -318,33 +311,162 @@ const DiabetesPredict = () => {
           
           <div className="border-t pt-4 mt-6">
             <h3 className="text-lg font-medium mb-4">Smoking History</h3>
-            <FormField
-              control={form.control}
-              name="smoking_history"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Your Smoking History</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <FormField
+                control={form.control}
+                name="smoking_history_current"
+                render={({ field }) => (
+                  <FormItem className="space-y-3">
+                    <FormLabel>Are you currently smoking?</FormLabel>
                     <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select your smoking history" />
-                      </SelectTrigger>
+                      <RadioGroup
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                        className="flex flex-col space-y-1"
+                      >
+                        <FormItem className="flex items-center space-x-3 space-y-0">
+                          <FormControl>
+                            <RadioGroupItem value="1" />
+                          </FormControl>
+                          <FormLabel className="font-normal">Yes</FormLabel>
+                        </FormItem>
+                        <FormItem className="flex items-center space-x-3 space-y-0">
+                          <FormControl>
+                            <RadioGroupItem value="0" />
+                          </FormControl>
+                          <FormLabel className="font-normal">No</FormLabel>
+                        </FormItem>
+                      </RadioGroup>
                     </FormControl>
-                    <SelectContent>
-                      <SelectItem value="0">Never smoked</SelectItem>
-                      <SelectItem value="1">Currently smoking</SelectItem>
-                      <SelectItem value="2">Ever smoked</SelectItem>
-                      <SelectItem value="3">Former smoker</SelectItem>
-                      <SelectItem value="4">Not currently smoking</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormDescription>
-                    Select the option that best describes your smoking history
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="smoking_history_ever"
+                render={({ field }) => (
+                  <FormItem className="space-y-3">
+                    <FormLabel>Have you ever smoked?</FormLabel>
+                    <FormControl>
+                      <RadioGroup
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                        className="flex flex-col space-y-1"
+                      >
+                        <FormItem className="flex items-center space-x-3 space-y-0">
+                          <FormControl>
+                            <RadioGroupItem value="1" />
+                          </FormControl>
+                          <FormLabel className="font-normal">Yes</FormLabel>
+                        </FormItem>
+                        <FormItem className="flex items-center space-x-3 space-y-0">
+                          <FormControl>
+                            <RadioGroupItem value="0" />
+                          </FormControl>
+                          <FormLabel className="font-normal">No</FormLabel>
+                        </FormItem>
+                      </RadioGroup>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="smoking_history_former"
+                render={({ field }) => (
+                  <FormItem className="space-y-3">
+                    <FormLabel>Are you a former smoker?</FormLabel>
+                    <FormControl>
+                      <RadioGroup
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                        className="flex flex-col space-y-1"
+                      >
+                        <FormItem className="flex items-center space-x-3 space-y-0">
+                          <FormControl>
+                            <RadioGroupItem value="1" />
+                          </FormControl>
+                          <FormLabel className="font-normal">Yes</FormLabel>
+                        </FormItem>
+                        <FormItem className="flex items-center space-x-3 space-y-0">
+                          <FormControl>
+                            <RadioGroupItem value="0" />
+                          </FormControl>
+                          <FormLabel className="font-normal">No</FormLabel>
+                        </FormItem>
+                      </RadioGroup>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="smoking_history_never"
+                render={({ field }) => (
+                  <FormItem className="space-y-3">
+                    <FormLabel>Have you never smoked?</FormLabel>
+                    <FormControl>
+                      <RadioGroup
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                        className="flex flex-col space-y-1"
+                      >
+                        <FormItem className="flex items-center space-x-3 space-y-0">
+                          <FormControl>
+                            <RadioGroupItem value="1" />
+                          </FormControl>
+                          <FormLabel className="font-normal">Yes</FormLabel>
+                        </FormItem>
+                        <FormItem className="flex items-center space-x-3 space-y-0">
+                          <FormControl>
+                            <RadioGroupItem value="0" />
+                          </FormControl>
+                          <FormLabel className="font-normal">No</FormLabel>
+                        </FormItem>
+                      </RadioGroup>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="smoking_history_not_current"
+                render={({ field }) => (
+                  <FormItem className="space-y-3">
+                    <FormLabel>Are you not currently smoking?</FormLabel>
+                    <FormControl>
+                      <RadioGroup
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                        className="flex flex-col space-y-1"
+                      >
+                        <FormItem className="flex items-center space-x-3 space-y-0">
+                          <FormControl>
+                            <RadioGroupItem value="1" />
+                          </FormControl>
+                          <FormLabel className="font-normal">Yes</FormLabel>
+                        </FormItem>
+                        <FormItem className="flex items-center space-x-3 space-y-0">
+                          <FormControl>
+                            <RadioGroupItem value="0" />
+                          </FormControl>
+                          <FormLabel className="font-normal">No</FormLabel>
+                        </FormItem>
+                      </RadioGroup>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
           </div>
           
           <Button type="submit" className="w-full sm:w-auto bg-healthcare-600 hover:bg-healthcare-700">
