@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Checkbox } from '@/components/ui/checkbox';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
@@ -26,9 +27,21 @@ const formSchema = z.object({
   gender: z.enum(["Female", "Male", "Other"], {
     required_error: "Please select your gender",
   }),
-  smoking: z.enum(["0", "1"], {
-    required_error: "Please select if you smoke",
-  })
+  smoking_history_current: z.enum(["0", "1"], {
+    required_error: "Please answer if you currently smoke",
+  }),
+  smoking_history_ever: z.enum(["0", "1"], {
+    required_error: "Please answer if you have ever smoked",
+  }),
+  smoking_history_former: z.enum(["0", "1"], {
+    required_error: "Please answer if you are a former smoker",
+  }),
+  smoking_history_never: z.enum(["0", "1"], {
+    required_error: "Please answer if you have never smoked",
+  }),
+  smoking_history_not_current: z.enum(["0", "1"], {
+    required_error: "Please answer if you're not currently smoking",
+  }),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -47,7 +60,11 @@ const DiabetesPredict = () => {
       HbA1c_level: undefined,
       blood_glucose_level: undefined,
       gender: undefined,
-      smoking: undefined,
+      smoking_history_current: undefined,
+      smoking_history_ever: undefined,
+      smoking_history_former: undefined,
+      smoking_history_never: undefined,
+      smoking_history_not_current: undefined,
     },
   });
 
@@ -64,11 +81,11 @@ const DiabetesPredict = () => {
       blood_glucose_level: data.blood_glucose_level,
       gender_Male: data.gender === "Male" ? 1 : 0,
       gender_Other: data.gender === "Other" ? 1 : 0,
-      smoking_history_current: data.smoking === "1" ? 1 : 0,
-      smoking_history_ever: data.smoking === "1" ? 1 : 0,
-      smoking_history_former: data.smoking === "1" ? 1 : 0,
-      smoking_history_never: data.smoking === "0" ? 1 : 0,
-      smoking_history_not_current: data.smoking === "0" ? 1 : 0,
+      smoking_history_current: data.smoking_history_current === "1" ? 1 : 0,
+      smoking_history_ever: data.smoking_history_ever === "1" ? 1 : 0,
+      smoking_history_former: data.smoking_history_former === "1" ? 1 : 0,
+      smoking_history_never: data.smoking_history_never === "1" ? 1 : 0,
+      smoking_history_not_current: data.smoking_history_not_current === "1" ? 1 : 0,
     };
     
     console.log("Model input:", modelInput);
@@ -95,9 +112,13 @@ const DiabetesPredict = () => {
     if (data.blood_glucose_level > 180) score += 25;
     else if (data.blood_glucose_level > 140) score += 15;
     
-    // Gender and smoking can also contribute
+    // Gender factor
     if (data.gender === "Male") score += 5;
-    if (data.smoking === "1") score += 10;
+    
+    // Smoking history factors
+    if (data.smoking_history_current === "1") score += 10;
+    if (data.smoking_history_ever === "1") score += 5;
+    if (data.smoking_history_former === "1") score += 3;
     
     // Scale to percentage (0-100)
     const finalScore = Math.min(Math.round(score), 100);
@@ -286,37 +307,166 @@ const DiabetesPredict = () => {
                 </FormItem>
               )}
             />
-            
-            <FormField
-              control={form.control}
-              name="smoking"
-              render={({ field }) => (
-                <FormItem className="space-y-3">
-                  <FormLabel>Do you smoke?</FormLabel>
-                  <FormControl>
-                    <RadioGroup
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
-                      className="flex flex-col space-y-1"
-                    >
-                      <FormItem className="flex items-center space-x-3 space-y-0">
-                        <FormControl>
-                          <RadioGroupItem value="1" />
-                        </FormControl>
-                        <FormLabel className="font-normal">Yes</FormLabel>
-                      </FormItem>
-                      <FormItem className="flex items-center space-x-3 space-y-0">
-                        <FormControl>
-                          <RadioGroupItem value="0" />
-                        </FormControl>
-                        <FormLabel className="font-normal">No</FormLabel>
-                      </FormItem>
-                    </RadioGroup>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+          </div>
+          
+          <div className="border-t pt-4 mt-6">
+            <h3 className="text-lg font-medium mb-4">Smoking History</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <FormField
+                control={form.control}
+                name="smoking_history_current"
+                render={({ field }) => (
+                  <FormItem className="space-y-3">
+                    <FormLabel>Are you currently smoking?</FormLabel>
+                    <FormControl>
+                      <RadioGroup
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                        className="flex flex-col space-y-1"
+                      >
+                        <FormItem className="flex items-center space-x-3 space-y-0">
+                          <FormControl>
+                            <RadioGroupItem value="1" />
+                          </FormControl>
+                          <FormLabel className="font-normal">Yes</FormLabel>
+                        </FormItem>
+                        <FormItem className="flex items-center space-x-3 space-y-0">
+                          <FormControl>
+                            <RadioGroupItem value="0" />
+                          </FormControl>
+                          <FormLabel className="font-normal">No</FormLabel>
+                        </FormItem>
+                      </RadioGroup>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="smoking_history_ever"
+                render={({ field }) => (
+                  <FormItem className="space-y-3">
+                    <FormLabel>Have you ever smoked?</FormLabel>
+                    <FormControl>
+                      <RadioGroup
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                        className="flex flex-col space-y-1"
+                      >
+                        <FormItem className="flex items-center space-x-3 space-y-0">
+                          <FormControl>
+                            <RadioGroupItem value="1" />
+                          </FormControl>
+                          <FormLabel className="font-normal">Yes</FormLabel>
+                        </FormItem>
+                        <FormItem className="flex items-center space-x-3 space-y-0">
+                          <FormControl>
+                            <RadioGroupItem value="0" />
+                          </FormControl>
+                          <FormLabel className="font-normal">No</FormLabel>
+                        </FormItem>
+                      </RadioGroup>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="smoking_history_former"
+                render={({ field }) => (
+                  <FormItem className="space-y-3">
+                    <FormLabel>Are you a former smoker?</FormLabel>
+                    <FormControl>
+                      <RadioGroup
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                        className="flex flex-col space-y-1"
+                      >
+                        <FormItem className="flex items-center space-x-3 space-y-0">
+                          <FormControl>
+                            <RadioGroupItem value="1" />
+                          </FormControl>
+                          <FormLabel className="font-normal">Yes</FormLabel>
+                        </FormItem>
+                        <FormItem className="flex items-center space-x-3 space-y-0">
+                          <FormControl>
+                            <RadioGroupItem value="0" />
+                          </FormControl>
+                          <FormLabel className="font-normal">No</FormLabel>
+                        </FormItem>
+                      </RadioGroup>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="smoking_history_never"
+                render={({ field }) => (
+                  <FormItem className="space-y-3">
+                    <FormLabel>Have you never smoked?</FormLabel>
+                    <FormControl>
+                      <RadioGroup
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                        className="flex flex-col space-y-1"
+                      >
+                        <FormItem className="flex items-center space-x-3 space-y-0">
+                          <FormControl>
+                            <RadioGroupItem value="1" />
+                          </FormControl>
+                          <FormLabel className="font-normal">Yes</FormLabel>
+                        </FormItem>
+                        <FormItem className="flex items-center space-x-3 space-y-0">
+                          <FormControl>
+                            <RadioGroupItem value="0" />
+                          </FormControl>
+                          <FormLabel className="font-normal">No</FormLabel>
+                        </FormItem>
+                      </RadioGroup>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="smoking_history_not_current"
+                render={({ field }) => (
+                  <FormItem className="space-y-3">
+                    <FormLabel>Are you not currently smoking?</FormLabel>
+                    <FormControl>
+                      <RadioGroup
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                        className="flex flex-col space-y-1"
+                      >
+                        <FormItem className="flex items-center space-x-3 space-y-0">
+                          <FormControl>
+                            <RadioGroupItem value="1" />
+                          </FormControl>
+                          <FormLabel className="font-normal">Yes</FormLabel>
+                        </FormItem>
+                        <FormItem className="flex items-center space-x-3 space-y-0">
+                          <FormControl>
+                            <RadioGroupItem value="0" />
+                          </FormControl>
+                          <FormLabel className="font-normal">No</FormLabel>
+                        </FormItem>
+                      </RadioGroup>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
           </div>
           
           <Button type="submit" className="w-full sm:w-auto bg-healthcare-600 hover:bg-healthcare-700">
