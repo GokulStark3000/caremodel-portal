@@ -39,7 +39,13 @@ const DiabetesPredict = () => {
   const [riskScore, setRiskScore] = useState(0);
   
   // Define the smoking history mapping
-  const smokingMapping = {
+  const smokingMapping: Record<string, { 
+    smoking_history_current: number, 
+    smoking_history_ever: number, 
+    smoking_history_former: number, 
+    smoking_history_never: number, 
+    smoking_history_not_current: number 
+  }> = {
     "0": { smoking_history_current: 0, smoking_history_ever: 0, smoking_history_former: 0, smoking_history_never: 1, smoking_history_not_current: 0 }, // Never
     "1": { smoking_history_current: 1, smoking_history_ever: 0, smoking_history_former: 0, smoking_history_never: 0, smoking_history_not_current: 0 }, // Current
     "2": { smoking_history_current: 0, smoking_history_ever: 1, smoking_history_former: 0, smoking_history_never: 0, smoking_history_not_current: 0 }, // Ever
