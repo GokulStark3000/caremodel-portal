@@ -3,24 +3,33 @@ import React, { useState } from 'react';
 import PredictionLayout from '@/components/layout/PredictionLayout';
 import { Droplet, AlertCircle } from 'lucide-react';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
+import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 
 const formSchema = z.object({
   age: z.coerce.number().min(1, "Age is required").max(120, "Age must be less than 120"),
-  gender: z.string().min(1, "Gender is required"),
+  hypertension: z.enum(["0", "1"], {
+    required_error: "Please select if you have hypertension",
+  }),
+  heart_disease: z.enum(["0", "1"], {
+    required_error: "Please select if you have heart disease",
+  }),
   bmi: z.coerce.number().min(10, "BMI must be at least 10").max(50, "BMI must be less than 50"),
-  glucose: z.coerce.number().min(50, "Glucose must be at least 50").max(300, "Glucose must be less than 300"),
-  bloodPressure: z.coerce.number().min(50, "Blood pressure must be at least 50").max(200, "Blood pressure must be less than 200"),
-  insulin: z.coerce.number().min(0, "Insulin must be at least 0"),
-  familyHistory: z.string().min(1, "Family history is required"),
-  physicalActivity: z.string().min(1, "Physical activity level is required"),
+  HbA1c_level: z.coerce.number().min(3, "HbA1c level must be at least 3").max(15, "HbA1c level must be less than 15"),
+  blood_glucose_level: z.coerce.number().min(50, "Blood glucose must be at least 50").max(500, "Blood glucose must be less than 500"),
+  gender: z.enum(["Female", "Male", "Other"], {
+    required_error: "Please select your gender",
+  }),
+  smoking_history: z.enum(["current", "ever", "former", "never", "not current"], {
+    required_error: "Please select your smoking history",
+  })
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -33,39 +42,64 @@ const DiabetesPredict = () => {
     resolver: zodResolver(formSchema),
     defaultValues: {
       age: undefined,
-      gender: "",
+      hypertension: undefined,
+      heart_disease: undefined,
       bmi: undefined,
-      glucose: undefined,
-      bloodPressure: undefined,
-      insulin: undefined,
-      familyHistory: "",
-      physicalActivity: "",
+      HbA1c_level: undefined,
+      blood_glucose_level: undefined,
+      gender: undefined,
+      smoking_history: undefined,
     },
   });
 
   const onSubmit = (data: FormValues) => {
     console.log("Form data:", data);
     
+    // Convert data for ML model format
+    const modelInput = {
+      age: data.age,
+      hypertension: parseInt(data.hypertension),
+      heart_disease: parseInt(data.heart_disease),
+      bmi: data.bmi,
+      HbA1c_level: data.HbA1c_level,
+      blood_glucose_level: data.blood_glucose_level,
+      gender_Male: data.gender === "Male" ? 1 : 0,
+      gender_Other: data.gender === "Other" ? 1 : 0,
+      smoking_history_current: data.smoking_history === "current" ? 1 : 0,
+      smoking_history_ever: data.smoking_history === "ever" ? 1 : 0,
+      smoking_history_former: data.smoking_history === "former" ? 1 : 0,
+      smoking_history_never: data.smoking_history === "never" ? 1 : 0,
+      smoking_history_not_current: data.smoking_history === "not current" ? 1 : 0,
+    };
+    
+    console.log("Model input:", modelInput);
+    
     // Simplified ML prediction simulation
     let score = 0;
     
     // Age factor
-    if (data.age > 45) score += 20;
-    else if (data.age > 30) score += 10;
+    if (data.age > 45) score += 10;
+    else if (data.age > 30) score += 5;
+    
+    // Medical conditions
+    if (data.hypertension === "1") score += 15;
+    if (data.heart_disease === "1") score += 20;
     
     // BMI factor
-    if (data.bmi > 30) score += 25;
-    else if (data.bmi > 25) score += 15;
+    if (data.bmi > 30) score += 15;
+    else if (data.bmi > 25) score += 10;
     
-    // Glucose factor
-    if (data.glucose > 140) score += 30;
-    else if (data.glucose > 100) score += 20;
+    // HbA1c and glucose levels
+    if (data.HbA1c_level > 6.5) score += 25;
+    else if (data.HbA1c_level > 5.7) score += 15;
     
-    // Family history
-    if (data.familyHistory === "yes") score += 15;
+    if (data.blood_glucose_level > 180) score += 25;
+    else if (data.blood_glucose_level > 140) score += 15;
     
-    // Physical activity
-    if (data.physicalActivity === "low") score += 10;
+    // Gender and smoking can also contribute
+    if (data.gender === "Male") score += 5;
+    if (data.smoking_history === "current") score += 10;
+    else if (data.smoking_history === "former" || data.smoking_history === "ever") score += 5;
     
     // Scale to percentage (0-100)
     const finalScore = Math.min(Math.round(score), 100);
@@ -79,6 +113,15 @@ const DiabetesPredict = () => {
       icon={<Droplet size={28} />}
       diseaseRoute="/disease/diabetes"
     >
+      <Alert className="mb-6">
+        <AlertCircle className="h-4 w-4" />
+        <AlertTitle>Information Notice</AlertTitle>
+        <AlertDescription>
+          This prediction model uses machine learning to estimate diabetes risk based on several health metrics.
+          Please enter accurate information for the best results.
+        </AlertDescription>
+      </Alert>
+      
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -100,18 +143,33 @@ const DiabetesPredict = () => {
               control={form.control}
               name="gender"
               render={({ field }) => (
-                <FormItem>
+                <FormItem className="space-y-3">
                   <FormLabel>Gender</FormLabel>
                   <FormControl>
-                    <select
-                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
-                      {...field}
+                    <RadioGroup
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                      className="flex flex-col space-y-1"
                     >
-                      <option value="">Select gender</option>
-                      <option value="male">Male</option>
-                      <option value="female">Female</option>
-                      <option value="other">Other</option>
-                    </select>
+                      <FormItem className="flex items-center space-x-3 space-y-0">
+                        <FormControl>
+                          <RadioGroupItem value="Female" />
+                        </FormControl>
+                        <FormLabel className="font-normal">Female</FormLabel>
+                      </FormItem>
+                      <FormItem className="flex items-center space-x-3 space-y-0">
+                        <FormControl>
+                          <RadioGroupItem value="Male" />
+                        </FormControl>
+                        <FormLabel className="font-normal">Male</FormLabel>
+                      </FormItem>
+                      <FormItem className="flex items-center space-x-3 space-y-0">
+                        <FormControl>
+                          <RadioGroupItem value="Other" />
+                        </FormControl>
+                        <FormLabel className="font-normal">Other</FormLabel>
+                      </FormItem>
+                    </RadioGroup>
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -137,13 +195,33 @@ const DiabetesPredict = () => {
             
             <FormField
               control={form.control}
-              name="glucose"
+              name="HbA1c_level"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Fasting Blood Glucose (mg/dL)</FormLabel>
+                  <FormLabel>HbA1c Level (%)</FormLabel>
+                  <FormControl>
+                    <Input type="number" placeholder="Enter HbA1c level" step="0.1" {...field} />
+                  </FormControl>
+                  <FormDescription>
+                    Normal: below 5.7%, Prediabetes: 5.7%-6.4%, Diabetes: 6.5% or higher
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            <FormField
+              control={form.control}
+              name="blood_glucose_level"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Blood Glucose Level (mg/dL)</FormLabel>
                   <FormControl>
                     <Input type="number" placeholder="Enter blood glucose level" {...field} />
                   </FormControl>
+                  <FormDescription>
+                    Fasting blood sugar level
+                  </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
@@ -151,47 +229,29 @@ const DiabetesPredict = () => {
             
             <FormField
               control={form.control}
-              name="bloodPressure"
+              name="hypertension"
               render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Blood Pressure (mm Hg - systolic)</FormLabel>
+                <FormItem className="space-y-3">
+                  <FormLabel>Do you have Hypertension?</FormLabel>
                   <FormControl>
-                    <Input type="number" placeholder="Enter blood pressure" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              control={form.control}
-              name="insulin"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Insulin Level (µU/mL)</FormLabel>
-                  <FormControl>
-                    <Input type="number" placeholder="Enter insulin level" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              control={form.control}
-              name="familyHistory"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Family History of Diabetes</FormLabel>
-                  <FormControl>
-                    <select
-                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
-                      {...field}
+                    <RadioGroup
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                      className="flex flex-col space-y-1"
                     >
-                      <option value="">Select option</option>
-                      <option value="yes">Yes</option>
-                      <option value="no">No</option>
-                    </select>
+                      <FormItem className="flex items-center space-x-3 space-y-0">
+                        <FormControl>
+                          <RadioGroupItem value="1" />
+                        </FormControl>
+                        <FormLabel className="font-normal">Yes</FormLabel>
+                      </FormItem>
+                      <FormItem className="flex items-center space-x-3 space-y-0">
+                        <FormControl>
+                          <RadioGroupItem value="0" />
+                        </FormControl>
+                        <FormLabel className="font-normal">No</FormLabel>
+                      </FormItem>
+                    </RadioGroup>
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -200,20 +260,78 @@ const DiabetesPredict = () => {
             
             <FormField
               control={form.control}
-              name="physicalActivity"
+              name="heart_disease"
               render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Physical Activity Level</FormLabel>
+                <FormItem className="space-y-3">
+                  <FormLabel>Do you have Heart Disease?</FormLabel>
                   <FormControl>
-                    <select
-                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
-                      {...field}
+                    <RadioGroup
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                      className="flex flex-col space-y-1"
                     >
-                      <option value="">Select activity level</option>
-                      <option value="high">High (Regular vigorous exercise)</option>
-                      <option value="medium">Medium (Moderate exercise)</option>
-                      <option value="low">Low (Little to no exercise)</option>
-                    </select>
+                      <FormItem className="flex items-center space-x-3 space-y-0">
+                        <FormControl>
+                          <RadioGroupItem value="1" />
+                        </FormControl>
+                        <FormLabel className="font-normal">Yes</FormLabel>
+                      </FormItem>
+                      <FormItem className="flex items-center space-x-3 space-y-0">
+                        <FormControl>
+                          <RadioGroupItem value="0" />
+                        </FormControl>
+                        <FormLabel className="font-normal">No</FormLabel>
+                      </FormItem>
+                    </RadioGroup>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            <FormField
+              control={form.control}
+              name="smoking_history"
+              render={({ field }) => (
+                <FormItem className="space-y-3">
+                  <FormLabel>Smoking History</FormLabel>
+                  <FormControl>
+                    <RadioGroup
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                      className="flex flex-col space-y-1"
+                    >
+                      <FormItem className="flex items-center space-x-3 space-y-0">
+                        <FormControl>
+                          <RadioGroupItem value="current" />
+                        </FormControl>
+                        <FormLabel className="font-normal">Current smoker</FormLabel>
+                      </FormItem>
+                      <FormItem className="flex items-center space-x-3 space-y-0">
+                        <FormControl>
+                          <RadioGroupItem value="ever" />
+                        </FormControl>
+                        <FormLabel className="font-normal">Ever smoked</FormLabel>
+                      </FormItem>
+                      <FormItem className="flex items-center space-x-3 space-y-0">
+                        <FormControl>
+                          <RadioGroupItem value="former" />
+                        </FormControl>
+                        <FormLabel className="font-normal">Former smoker</FormLabel>
+                      </FormItem>
+                      <FormItem className="flex items-center space-x-3 space-y-0">
+                        <FormControl>
+                          <RadioGroupItem value="never" />
+                        </FormControl>
+                        <FormLabel className="font-normal">Never smoked</FormLabel>
+                      </FormItem>
+                      <FormItem className="flex items-center space-x-3 space-y-0">
+                        <FormControl>
+                          <RadioGroupItem value="not current" />
+                        </FormControl>
+                        <FormLabel className="font-normal">Not currently smoking</FormLabel>
+                      </FormItem>
+                    </RadioGroup>
                   </FormControl>
                   <FormMessage />
                 </FormItem>
